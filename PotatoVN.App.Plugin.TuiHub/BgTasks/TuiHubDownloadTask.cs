@@ -23,11 +23,11 @@ public class TuiHubDownloadTask : BgTaskBase
     private readonly string _appName;
     private readonly string _binaryId;
     private readonly string _downloadRootDir;
-    private CancellationTokenSource? _cts;
     private DownloadService? _downloadService;
 
     public override string Title => $"下载 {_appName}";
     public override bool ProgressOnTrayIcon => true;
+    public override bool CanCancel => true;
 
     public TuiHubDownloadTask(
         IPotatoVnApi api,
@@ -49,8 +49,8 @@ public class TuiHubDownloadTask : BgTaskBase
 
     protected override async Task RunInternal()
     {
-        _cts = new CancellationTokenSource();
-        var ct = _cts.Token;
+        CancellationTokenSource = new CancellationTokenSource();
+        var ct = CancellationToken!.Value;
 
         try
         {
@@ -138,6 +138,9 @@ public class TuiHubDownloadTask : BgTaskBase
 
                 _downloadService = new DownloadService(downloadOpt);
 
+                // 注册取消回调，确保 DownloadService 能够快速响应取消
+                ct.Register(() => _downloadService?.CancelAsync());
+
                 // 进度回调
                 _downloadService.DownloadProgressChanged += (sender, e) =>
                 {
@@ -214,8 +217,8 @@ public class TuiHubDownloadTask : BgTaskBase
         {
             _downloadService?.Dispose();
             _downloadService = null;
-            _cts?.Dispose();
-            _cts = null;
+            CancellationTokenSource?.Dispose();
+            CancellationTokenSource = null;
         }
     }
 
@@ -238,12 +241,6 @@ public class TuiHubDownloadTask : BgTaskBase
         // 从 JSON 恢复时不执行任何操作
         ChangeProgress(-1, 1, "任务已过期，请重新下载");
         return Task.CompletedTask;
-    }
-
-    public void Cancel()
-    {
-        _cts?.Cancel();
-        _downloadService?.CancelAsync();
     }
 }
 

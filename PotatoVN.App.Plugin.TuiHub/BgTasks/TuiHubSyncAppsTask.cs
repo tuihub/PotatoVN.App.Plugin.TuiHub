@@ -20,9 +20,9 @@ public class TuiHubSyncAppsTask : BgTaskBase
     private readonly TuiHubAuthService _authService;
     private readonly GrpcChannelFactory _grpcFactory;
     private readonly TuiHubCacheStore _cacheStore;
-    private CancellationTokenSource? _cts;
 
     public override string Title => "同步 TuiHub 应用库";
+    public override bool CanCancel => true;
 
     public TuiHubSyncAppsTask(
         IPotatoVnApi api,
@@ -38,8 +38,8 @@ public class TuiHubSyncAppsTask : BgTaskBase
 
     protected override async Task RunInternal()
     {
-        _cts = new CancellationTokenSource();
-        var ct = _cts.Token;
+        CancellationTokenSource = new CancellationTokenSource();
+        var ct = CancellationToken!.Value;
 
         try
         {
@@ -146,8 +146,8 @@ public class TuiHubSyncAppsTask : BgTaskBase
         }
         finally
         {
-            _cts?.Dispose();
-            _cts = null;
+            CancellationTokenSource?.Dispose();
+            CancellationTokenSource = null;
         }
     }
 
@@ -156,11 +156,6 @@ public class TuiHubSyncAppsTask : BgTaskBase
         // 从 JSON 恢复时不执行任何操作，标记为失败
         ChangeProgress(-1, 1, "任务已过期，请重新同步");
         return Task.CompletedTask;
-    }
-
-    public void Cancel()
-    {
-        _cts?.Cancel();
     }
 }
 
