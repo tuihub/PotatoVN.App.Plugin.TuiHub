@@ -1,15 +1,14 @@
-using System;
-using System.Text.Json;
-using System.Threading.Tasks;
 using GalgameManager.WinApp.Base.Contracts;
 using GalgameManager.WinApp.Base.Contracts.PluginUi;
 using GalgameManager.WinApp.Base.Models;
-using Microsoft.UI.Xaml;
+using PotatoVN.App.Plugin.TuiHub.BgTasks;
 using PotatoVN.App.Plugin.TuiHub.Models;
 using PotatoVN.App.Plugin.TuiHub.Services.Auth;
 using PotatoVN.App.Plugin.TuiHub.Services.Cache;
 using PotatoVN.App.Plugin.TuiHub.Services.Grpc;
-using PotatoVN.App.Plugin.TuiHub.UI.Settings;
+using System;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace PotatoVN.App.Plugin.TuiHub;
 
@@ -67,6 +66,10 @@ public partial class Plugin : IPlugin, IPluginSetting
         };
 
         _data.PropertyChanged += (s, e) => SaveData();
+
+        // 添加测试用的后台任务
+        _ = _hostApi.AddBgTask(new DummyBgTask1());
+        _ = _hostApi.AddBgTask(new DummyBgTask2());
     }
 
     private void SaveData()
